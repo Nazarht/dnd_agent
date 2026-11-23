@@ -21,4 +21,6 @@ class AgentState(TypedDict):
     character: Character
     world: GameMap
     step_count: int
+    # Момент (time.monotonic), після якого хід зупиняється; ставиться на першому виклику моделі в ході
+    turn_deadline: float | None
     response: GMResponse | None

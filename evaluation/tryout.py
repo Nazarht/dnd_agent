@@ -7,11 +7,12 @@
 
 from dataclasses import dataclass
 
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 from langgraph.checkpoint.memory import MemorySaver
 from rich.console import Console
 
 from dnd_agent.agent.graph import SERDE, build_graph
+from dnd_agent.constants import WORLD_EVENT
 from dnd_agent.game.loader import load_character, load_world
 
 console = Console()
@@ -70,6 +71,9 @@ def _print_turn(number: int, turn: Turn, out: dict, before: dict) -> list[str]:
             style = "red" if message.status == "error" else "dim"
             first_line = message.content.splitlines()[0]
             console.print(f"  [{style}]← {first_line}[/{style}]")
+        elif isinstance(message, SystemMessage) and message.name == WORLD_EVENT:
+            # Подію починає світ, а не гравець: позначаємо, щоб було видно в звіті
+            console.print(f"  [magenta]⚡ {message.content.splitlines()[0]}[/magenta]")
 
     _print_state_changes(before, out)
 

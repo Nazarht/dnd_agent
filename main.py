@@ -6,13 +6,13 @@ from rich.console import Console
 
 from dnd_agent.config import MODEL_NAME
 
-app = typer.Typer(help="D&D ReAct-агент: гра, демо та оцінювання.")
+app = typer.Typer(help="D&D ReAct-агент: гра та перевірки.")
 console = Console()
 
 
 @app.callback()
 def cli() -> None:
-    """Команди проєкту: check, tryout, play, demo-safety, eval."""
+    """Команди проєкту: check, play, demo-safety."""
 
 
 @app.command()
@@ -24,11 +24,19 @@ def check() -> None:
 
 
 @app.command()
-def tryout() -> None:
-    """Прогнати сценарій ходів через реальну модель без UI."""
-    from evaluation.tryout import run_tryout
+def demo_safety() -> None:
+    """Показати три захисники: ліміт кроків, таймаут ходу, детектор зациклення (без API)."""
+    from dnd_agent.safety.demo import run_safety_demo
 
-    run_tryout()
+    run_safety_demo()
+
+
+@app.command()
+def play(world: str = "forest", character: str = "priest") -> None:
+    """Грати в терміналі: карта, стан персонажа і чат."""
+    from dnd_agent.ui.play import run_play
+
+    run_play(world, character)
 
 
 if __name__ == "__main__":
