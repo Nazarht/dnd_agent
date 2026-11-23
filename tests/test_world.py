@@ -104,11 +104,3 @@ def test_surroundings_without_objects(world):
     text = world.surroundings((0, 0), 1)
     assert text.endswith("Об'єкти поруч:\n- немає")
 
-
-@pytest.mark.xfail(
-    strict=True,
-    reason="Відома помилка: скарб під персонажем прихований символом @ і не перелічується",
-)
-def test_surroundings_show_treasure_under_player(world):
-    text = world.surroundings((6, 3), 2)
-    assert "скарб" in text

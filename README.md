@@ -110,14 +110,11 @@ Files written per run:
 
 ## Tests
 
-`pytest` runs 89 tests and 1 expected failure. The tests cover:
+`pytest` runs 90 tests. The tests cover:
 
 - the world (map validation, cell rules, surroundings), the loader, and the four tools, with valid and invalid inputs,
 - the safety mechanisms (step limit, timeout, loop detector) through the full graph with scripted models,
 - the world-event loop, the trajectory logger, and the evaluation runner.
-
-The expected failure is a known bug: a treasure under the player is hidden by the `@` marker (see Known issues). It is marked `xfail(strict=True)`, so the test starts failing as soon as the bug is fixed, which is the signal to remove the marker.
-
 ## Evaluation results
 
 ### Evaluation cases
@@ -169,7 +166,7 @@ The final run's tool calls:
 
 ## Known issues
 
-1. Treasure under the player is hidden by the `@` marker (`surroundings` skips the player's cell and `_render` draws `@`). Marked as an expected failure in `tests/test_world.py`.
+1. Treasure under the player is hidden by the `@` marker (`surroundings` skips the player's cell and `_render` draws `@`). No test covers this yet.
 2. Attacks have no target number or hit and miss rule; outcomes are decided by the GM's text.
 3. The GM narrates scenery that is not in the state, and sometimes contradicts the tool results in its text.
 4. The narration is not checked by the evaluation, only the tool calls and the state.

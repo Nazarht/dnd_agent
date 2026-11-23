@@ -67,15 +67,16 @@ def describe_move(result: MoveResult, world: GameMap) -> str:
     """Текст для LLM: що сталося з рухом і що видно навколо нової позиції."""
     d = result.direction.label
     x, y = result.end
+    sx, sy = result.start
     if result.taken == 0:
         head = f"Не можна піти на {d}: перешкода - {result.blocker}. Персонаж лишається на ({x}, {y})."
     elif result.blocker:
         head = (
-            f"Рух на {d}: пройдено {result.taken} з {result.requested}, тепер на ({x}, {y}). "
+            f"Рух на {d} з ({sx}, {sy}): пройдено {result.taken} з {result.requested}, тепер на ({x}, {y}). "
             f"Зупинено: {result.blocker}."
         )
     else:
-        head = f"Рух на {d}: пройдено {result.taken}, тепер на ({x}, {y})."
+        head = f"Рух на {d} з ({sx}, {sy}): пройдено {result.taken}, тепер на ({x}, {y})."
     view = world.surroundings((x, y), VIEW_RADIUS)
     return f"{head}\nОколиця (радіус {VIEW_RADIUS}):\n{view}"
 

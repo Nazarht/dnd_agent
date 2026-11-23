@@ -41,6 +41,12 @@ def test_describe_blocked_move_text(world):
     assert text.startswith("Не можна піти на захід: перешкода - дерево на (1, 4).")
 
 
+def test_describe_move_reports_start_and_end(world):
+    result = walk(world, (0, 3), Direction.EAST, 2)
+    text = describe_move(result, world)
+    assert text.startswith("Рух на схід з (0, 3): пройдено 2, тепер на (2, 3).")
+
+
 def test_describe_partial_move_text(world):
     result = walk(world, (0, 3), Direction.NORTH, 5)
     text = describe_move(result, world)
