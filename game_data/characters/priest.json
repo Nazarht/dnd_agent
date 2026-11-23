@@ -1,0 +1,14 @@
+{
+  "name": "Отець Маркус",
+  "description": "Мандрівний жрець світла: мудрий і харизматичний, але слабкий у ближньому бою.",
+  "hp": 16,
+  "max_hp": 16,
+  "attributes": {
+    "strength": -1,
+    "dexterity": 0,
+    "constitution": 1,
+    "intelligence": 0,
+    "wisdom": 3,
+    "charisma": 2
+  }
+}

@@ -1,0 +1,8 @@
+langgraph>=1.2
+langchain-core>=1.7
+langchain-openai>=1.7
+pydantic>=2.14
+python-dotenv>=1.2
+rich>=15.0
+typer>=0.28
+pytest>=8.0
