@@ -16,6 +16,7 @@ from dnd_agent.agent.graph import SERDE, build_graph
 from dnd_agent.audit.trajectory import TrajectoryLogger
 from dnd_agent.config import MODEL_NAME, OUTPUTS_DIR
 from dnd_agent.game.loader import load_character, load_world
+from dnd_agent.game.world import Cell
 from dnd_agent.utils.json_io import save_json
 from evaluation.test_cases import CASES, EvalCase
 
@@ -46,12 +47,18 @@ def check(case: EvalCase, actual: dict) -> dict[str, bool]:
         "tools": case.expect_tools <= set(actual["tools"]),
         "no_stop": actual["stop"] is None,
     }
+    if case.expect_sequence:
+        # Підпослідовність: `name in calls` з'їдає ітератор до першого збігу, тож порядок зберігається
+        calls = iter(actual["tool_calls"])
+        checks["sequence"] = all(name in calls for name in case.expect_sequence)
     if case.expect_position is not None:
         checks["position"] = actual["position"] == list(case.expect_position)
     if case.expect_hp is not None:
         checks["hp"] = actual["hp"] == case.expect_hp
     if case.expect_event is not None:
         checks["event"] = case.expect_event in actual["events"]
+    if case.expect_floor is not None:
+        checks["floor"] = actual.get("cleared") is True
     return checks
 
 
@@ -92,16 +99,23 @@ def _run_case(app, logger: TrajectoryLogger, case: EvalCase) -> dict:
 
     turn = logger.turns[-1]
     actual = summarize(turn)
+    if case.expect_floor is not None:
+        # Карту беремо зі стану після ходу: траєкторія зберігає лише HP і позицію
+        world = app.get_state(config).values["world"]
+        actual["cleared"] = world.cell(*case.expect_floor) is Cell.FLOOR
     checks = check(case, actual)
     return {
         "id": case.id,
+        "difficulty": case.difficulty,
         "query": case.query,
         "description": case.description,
         "expected": {
             "tools": sorted(case.expect_tools),
+            "sequence": list(case.expect_sequence),
             "position": list(case.expect_position) if case.expect_position else None,
             "hp": case.expect_hp,
             "event": case.expect_event,
+            "floor": list(case.expect_floor) if case.expect_floor else None,
         },
         "actual": actual,
         "checks": checks,
@@ -114,17 +128,21 @@ def _run_case(app, logger: TrajectoryLogger, case: EvalCase) -> dict:
 
 def _print_report(report: dict) -> None:
     table = Table(title=f"Оцінювання: {report['passed']}/{report['total']} пройдено")
-    table.add_column("Кейс")
-    table.add_column("Результат")
-    table.add_column("Інструменти")
-    table.add_column("Час, с", justify="right")
+    table.add_column("Кейс", no_wrap=True)
+    table.add_column("Складність", no_wrap=True)
+    table.add_column("Результат", no_wrap=True)
+    table.add_column("Кроків", justify="right", no_wrap=True)
+    table.add_column("Виклики інструментів")
+    table.add_column("Час, с", justify="right", no_wrap=True)
     table.add_column("Не збіглося")
     for result in report["cases"]:
         failed = [name for name, ok in result["checks"].items() if not ok]
         table.add_row(
             result["id"],
+            result["difficulty"],
             "[green]OK[/green]" if result["passed"] else "[red]ПОМИЛКА[/red]",
-            ", ".join(result["actual"]["tools"]) or "-",
+            str(len(result["steps"])),
+            " → ".join(result["actual"]["tool_calls"]) or "-",
             f"{result['time_seconds']:.1f}",
             ", ".join(failed) or "-",
         )

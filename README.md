@@ -55,8 +55,17 @@ Four tools are defined as Pydantic models with field descriptions and validators
 |---|---|---|
 | `roll_dice` | Roll dice (`NdM`), add an attribute modifier and a situational modifier | Dice notation, allowed die sizes, modifier range |
 | `modify_hp` | Deal damage or heal, clamped to 0..max HP | Non-zero delta within ±50 |
-| `move_character` | Move 1-5 cells in one direction; stops at the first obstacle | Direction enum, steps 1-5 |
-| `modify_map` | Change one map cell, e.g. remove a defeated monster | Coordinates in bounds, cell names, reason length; the game rules reject changes to walls, water, or the player's cell |
+| `move_character` | Move 1-5 cells in one direction; stops at the first obstacle | Direction enum (any letter case is accepted), steps 1-5 |
+| `modify_map` | Change one map cell, e.g. remove a defeated monster | Coordinates on the 8x8 map (0..7), cell names, reason length; the game rules reject changes to walls, water, or the player's cell |
+
+Every tool input model has a `field_validator` next to the `Field` limits:
+
+| Tool | `field_validator` |
+|---|---|
+| `roll_dice` | `dice` must be valid notation `NdM` with an allowed die size |
+| `modify_hp` | `delta` must not be 0 |
+| `move_character` | `direction` is stripped and lower-cased before the enum check, so `"East"` is accepted |
+| `modify_map` | `x` and `y` must lie on the 8x8 map (`MAP_SIZE` in `dnd_agent/game/world.py`) |
 
 Tools update the state through `Command` objects. A tool error (e.g. an illegal map edit) returns a tool message with `status="error"`, which the model sees and can correct.
 
@@ -106,47 +115,73 @@ Files written per run:
 
 - `run_meta.json`: run ID, command, status, start and finish times, totals.
 - `trajectory.json`: all turns, rewritten after each turn.
-- `test_results.json` (eval only): per case, the query, expected and actual values, each check, the steps, the tool calls, and the time.
+- `test_results.json` (eval only): per case, the difficulty, the query, expected and actual values, each check, the steps, the tool calls, and the time.
 
 ## Tests
 
-`pytest` runs 90 tests. The tests cover:
+`pytest` runs 103 tests. The tests cover:
 
 - the world (map validation, cell rules, surroundings), the loader, and the four tools, with valid and invalid inputs,
 - the safety mechanisms (step limit, timeout, loop detector) through the full graph with scripted models,
 - the world-event loop, the trajectory logger, and the evaluation runner.
+
 ## Evaluation results
 
 ### Evaluation cases
 
-`run_eval()` from `evaluation/runner.py` runs five single-turn cases against the real model. Each case starts a new game.
+`run_eval()` from `evaluation/runner.py` runs seven single-turn cases against the real model. Each case starts a new game and has a difficulty label:
 
-| Case | Player says | Checks |
-|---|---|---|
-| `move_two_steps` | "Іду на схід два кроки." | calls `move_character`; ends at (2, 3) |
-| `attack_roll` | "Атакую гобліна мечем!" (player starts next to the goblin) | calls `roll_dice` |
-| `trap_damage` | "Мене вдарила пастка, це 5 шкоди." | calls `modify_hp`; HP 16 -> 11 |
-| `blocked_by_tree` | "Іду на захід на одну клітинку." (player starts at (2, 4)) | calls `move_character`; stays at (2, 4) |
-| `monster_attacks` | "Огляньмося навколо." (player starts next to the goblin) | world event fires; calls `roll_dice` |
+- **simple**: one action, one tool.
+- **medium**: one goal that needs knowledge of the state, or several calls of the same kind.
+- **complex**: a chain of different tools where each action depends on the previous one.
+
+| Case | Difficulty | Player says | Checks |
+|---|---|---|---|
+| `move_two_steps` | simple | "Іду на схід два кроки." | calls `move_character`; ends at (2, 3) |
+| `trap_damage` | simple | "Мене вдарила пастка, це 5 шкоди." | calls `modify_hp`; HP 16 -> 11 |
+| `attack_roll` | medium | "Атакую гобліна мечем!" (player starts next to the goblin) | calls `roll_dice` |
+| `blocked_by_tree` | medium | "Іду на захід на одну клітинку." (player starts at (2, 4)) | calls `move_character`; stays at (2, 4) |
+| `monster_attacks` | medium | "Огляньмося навколо." (player starts next to the goblin) | world event fires; calls `roll_dice` |
+| `walk_to_treasure` | medium | "Іди на схід до скарбу." | the treasure is 6 cells away and one call moves at most 5, so `move_character` must be called twice in a row; ends at (6, 3) |
+| `approach_attack_remove` | complex | "Підійди до гобліна, атакуй його мечем і, якщо переміг, прибери його з карти. Гоблін слабкий: будь-який кидок атаки його вбиває." (player starts at (5, 2)) | tools in order `move_character` -> `roll_dice` -> `modify_map`; stops at (4, 2) because the goblin blocks the way; the goblin's cell (3, 2) becomes floor |
+
+The complex case states that any attack roll kills the goblin. Without that sentence, the "if he won" branch would depend on the hit rule the GM invents (known issue 2), and the case would pass or fail by luck.
+
+Besides the tools, position, HP, and world event, the runner has two more checks: `sequence` (the tools appear in the expected order, other calls may sit between them) and `floor` (a given cell is floor after the turn, read from the final game state).
 
 ### Results
 
 | Run | Passed | Notes |
 |---|---|---|
 | `20261123-123801-76d3` | 4 / 5 | `attack_roll` started three cells from the goblin. The model refused to attack and asked the player to move closer, which is the correct behavior. The case was wrong, so the case was fixed. |
-| `20261123-123855-abe4` | 5 / 5 | Final run with the corrected case. Turn times 5-13 s. |
+| `20261123-123855-abe4` | 5 / 5 | Corrected case, the first five cases only. Turn times 5-13 s. |
+| `20261123-170118-fef2` | 7 / 7 | All seven cases, including `walk_to_treasure` and the complex `approach_attack_remove`. |
 
-The final run's tool calls:
+Results of the last run (`20261123-170118-fef2`, model `gpt-6-luna`). "Steps" are the node updates recorded in the trajectory (`agent`, `tools`, `world_events`, `formatter`). "Tool calls" are the calls the model made during the turn.
 
-- `move_two_steps`: `move_character`
-- `attack_roll`: `roll_dice`, then the goblin's counterattack `roll_dice` through the world-event loop
-- `trap_damage`: `modify_hp` (HP 11)
-- `blocked_by_tree`: `move_character` (position unchanged)
-- `monster_attacks`: world event, `roll_dice` for the attack, `roll_dice` and `modify_hp` for the damage (HP 16 -> 12)
+| Test ID | Difficulty | Steps | Tool calls | Time, s |
+|---|---|---|---|---|
+| `move_two_steps` | simple | 4 | 1: `move_character` | 15.3 |
+| `trap_damage` | simple | 4 | 1: `modify_hp` | 11.6 |
+| `attack_roll` | medium | 12 | 4: `roll_dice` (attack), `roll_dice` (goblin's attack), `roll_dice` (damage), `modify_hp` | 25.1 |
+| `blocked_by_tree` | medium | 4 | 1: `move_character` | 7.0 |
+| `monster_attacks` | medium | 6 | 1: `roll_dice` | 11.7 |
+| `walk_to_treasure` | medium | 6 | 2: `move_character`, `move_character` | 14.5 |
+| `approach_attack_remove` | complex | 8 | 3: `move_character`, `roll_dice`, `modify_map` | 11.7 |
+
+Averages by difficulty:
+
+| Difficulty | Cases | Avg steps | Avg tool calls | Avg time, s |
+|---|---|---|---|---|
+| simple | 2 | 4.0 | 1.0 | 13.5 |
+| medium | 4 | 7.0 | 2.0 | 14.6 |
+| complex | 1 | 8.0 | 3.0 | 11.7 |
+
+**Simple against complex.** Steps and tool calls grow with the difficulty: a simple case takes 4 steps and 1 tool call, the complex case takes 8 steps and 3 tool calls. Time depends on the order of the run more than on the difficulty. In the first run, the two simple cases ran first and were the slowest per request. In the second run (complex first), the complex case was the slowest, with the first request taking 4.9 s. In both runs the first case was slowest, and the other cases took about 1.5 to 2.5 s per request. So the cost of a case is best measured in model requests, steps and tool calls, not in seconds. The difficulty label describes how much planning a case needs, not how much it costs. The world event did not fire in the complex case, because the goblin was removed from the map before the world-event check.
 
 ### Analysis
 
-**What works.** The model chooses the right tool for clear actions, and the tool results change the state correctly in every case of the final run. The world-event loop works on the real model: the goblin attacks without a player request, the model rolls the attack and the damage, and applies them. The model also refuses actions that the state does not allow (a melee attack from three cells away), and it explains the reason.
+**What works.** The model chooses the right tool for clear actions, and the tool results change the state correctly in every case of the last run. In the complex case the model planned the three-tool chain in the right order (move, attack roll, map edit), and the goblin's cell became floor. The world-event loop works on the real model: the goblin attacks without a player request, the model rolls the attack and the damage, and applies them. The model also refuses actions that the state does not allow (a melee attack from three cells away), and it explains the reason.
 
 **What the checks do not cover.** The evaluation checks which tools ran and what the state is after the turn. It does not check the narration. In an earlier run of `move_two_steps`, the tool reported the move to (2, 3), but the GM wrote that the character "stayed in place". The check passed because the state was right. Narration quality needs its own checks (for example, does the answer mention the position the state reports?).
 
@@ -162,7 +197,7 @@ The final run's tool calls:
 
 **Safety mechanisms.** The step limit, the turn timeout, and the loop detector were tested with scripted models, which are deterministic. In the real runs so far none of them fired, so their behavior with the real model is untested. The per-request timeout has not been triggered in a real run either.
 
-**Sample size.** The evaluation is five cases and one run per version. Model output varies between runs, so the pass rate is a rough indication, not a benchmark.
+**Sample size.** The evaluation is seven cases (two simple, four medium, one complex) and one run per version. There is only one complex case, so the simple-against-complex comparison is an illustration, not a statistic. Model output varies between runs, so the pass rate is a rough indication, not a benchmark.
 
 ## Known issues
 
@@ -190,7 +225,7 @@ dnd_agent/
   ui/                     terminal UI: rendering, play loop, slash commands
   utils/                  run context, JSON helpers, timing
 evaluation/
-  test_cases.py           the five evaluation cases
+  test_cases.py           the seven evaluation cases with difficulty labels
   runner.py               runs the cases, checks results, writes test_results.json
   tryout.py               scripted 7-turn scenario
 game_data/                worlds and characters (JSON)

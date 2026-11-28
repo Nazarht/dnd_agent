@@ -1,0 +1,420 @@
+{
+  "run_id": "20261123-123855-abe4",
+  "command": "eval",
+  "turns": [
+    {
+      "turn": 1,
+      "label": "move_two_steps",
+      "player": "Іду на схід два кроки.",
+      "started_at": "2026-11-23T12:38:55.200786+00:00",
+      "steps": [
+        {
+          "node": "agent",
+          "at_ms": 1818,
+          "tool_calls": [
+            {
+              "name": "move_character",
+              "args": {
+                "direction": "east",
+                "steps": 2
+              }
+            }
+          ]
+        },
+        {
+          "node": "tools",
+          "at_ms": 1819,
+          "tool_results": [
+            {
+              "tool": "move_character",
+              "status": "success",
+              "content": "Рух на схід: пройдено 2, тепер на (2, 3).\nОколиця (радіус 2):\n    0 1 2 3 4\n 1  . # . . .\n 2  . # . M .\n 3  . . @ . .\n 4  T T . # #\n 5  . . . . .\nОб'єкти поруч:\n- монстр на (3, 2): dx=+1, dy=-1"
+            }
+          ],
+          "hp": 16,
+          "position": [
+            2,
+            3
+          ]
+        },
+        {
+          "node": "agent",
+          "at_ms": 3305,
+          "text": "Отець Маркус рушає на схід і опиняється на (2, 3). У кущах неподалік, на (3, 2), причаївся гоблін."
+        },
+        {
+          "node": "formatter",
+          "at_ms": 5360,
+          "answer": "Отець Маркус рушає на схід і опиняється на (2, 3). У кущах неподалік, на (3, 2), причаївся гоблін.",
+          "confidence": 1.0,
+          "sources": [
+            "move_character"
+          ]
+        }
+      ],
+      "model_calls": 2,
+      "tool_calls": 1,
+      "stop": null,
+      "seconds": 5.363,
+      "final": {
+        "hp": 16,
+        "position": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "turn": 2,
+      "label": "attack_roll",
+      "player": "Атакую гобліна мечем!",
+      "started_at": "2026-11-23T12:39:00.565184+00:00",
+      "steps": [
+        {
+          "node": "agent",
+          "at_ms": 1824,
+          "tool_calls": [
+            {
+              "name": "roll_dice",
+              "args": {
+                "dice": "1d20",
+                "attribute": "strength",
+                "modifier": 0,
+                "purpose": "атака мечем по гобліну"
+              }
+            }
+          ]
+        },
+        {
+          "node": "tools",
+          "at_ms": 1825,
+          "tool_results": [
+            {
+              "tool": "roll_dice",
+              "status": "success",
+              "content": "атака мечем по гобліну -> кубики 1d20: [12], сила -1 = разом 11"
+            }
+          ]
+        },
+        {
+          "node": "agent",
+          "at_ms": 5606,
+          "text": "Твій меч просвистів повз гобліна: атака — **11**, цього не вистачило, щоб влучити. Гоблін відсахнувся в кущах, а ти залишаєшся на місці."
+        },
+        {
+          "node": "world_events",
+          "at_ms": 5607,
+          "event": {
+            "kind": "world_event",
+            "text": "[Подія світу] Монстри поруч атакують персонажа: (3, 2). Кожен монстр атакує окремо. Кинь roll_dice з dice='1d20' і purpose='атака монстра'. Якщо сума менша за 10 - промах, опиши це. Якщо не менша - влучання: кинь roll_dice з dice='1d4' і застосуй урон через modify_hp з від'ємним delta."
+          }
+        },
+        {
+          "node": "agent",
+          "at_ms": 7588,
+          "tool_calls": [
+            {
+              "name": "roll_dice",
+              "args": {
+                "dice": "1d20",
+                "attribute": null,
+                "modifier": 0,
+                "purpose": "атака монстра"
+              }
+            }
+          ]
+        },
+        {
+          "node": "tools",
+          "at_ms": 7591,
+          "tool_results": [
+            {
+              "tool": "roll_dice",
+              "status": "success",
+              "content": "атака монстра -> кубики 1d20: [2] = разом 2"
+            }
+          ]
+        },
+        {
+          "node": "agent",
+          "at_ms": 9749,
+          "text": "Гоблін кинувся на тебе, але його удар промахнувся — **2**. Ти неушкоджений."
+        },
+        {
+          "node": "formatter",
+          "at_ms": 11016,
+          "answer": "Гоблін кинувся на тебе, але його удар промахнувся — 2. Ти неушкоджений.",
+          "confidence": 1.0,
+          "sources": [
+            "roll_dice",
+            "roll_dice"
+          ]
+        }
+      ],
+      "model_calls": 4,
+      "tool_calls": 2,
+      "stop": null,
+      "seconds": 11.018,
+      "final": {
+        "hp": 16,
+        "position": [
+          2,
+          2
+        ]
+      }
+    },
+    {
+      "turn": 3,
+      "label": "trap_damage",
+      "player": "Мене вдарила пастка, це 5 шкоди.",
+      "started_at": "2026-11-23T12:39:11.585442+00:00",
+      "steps": [
+        {
+          "node": "agent",
+          "at_ms": 1712,
+          "tool_calls": [
+            {
+              "name": "modify_hp",
+              "args": {
+                "delta": -5,
+                "reason": "удар пастки"
+              }
+            }
+          ]
+        },
+        {
+          "node": "tools",
+          "at_ms": 1715,
+          "tool_results": [
+            {
+              "tool": "modify_hp",
+              "status": "success",
+              "content": "Урон 5 (удар пастки): HP 16 -> 11/16"
+            }
+          ],
+          "hp": 11,
+          "position": [
+            0,
+            3
+          ]
+        },
+        {
+          "node": "agent",
+          "at_ms": 3400,
+          "text": "Пастка різко б’є Отця Маркуса. Він скрикує від болю й хапається за рану. **HP: 11/16.**"
+        },
+        {
+          "node": "formatter",
+          "at_ms": 5023,
+          "answer": "Пастка різко б’є Отця Маркуса. Він скрикує від болю й хапається за рану. HP: 11/16.",
+          "confidence": 1.0,
+          "sources": [
+            "modify_hp"
+          ]
+        }
+      ],
+      "model_calls": 2,
+      "tool_calls": 1,
+      "stop": null,
+      "seconds": 5.024,
+      "final": {
+        "hp": 11,
+        "position": [
+          0,
+          3
+        ]
+      }
+    },
+    {
+      "turn": 4,
+      "label": "blocked_by_tree",
+      "player": "Іду на захід на одну клітинку.",
+      "started_at": "2026-11-23T12:39:16.611668+00:00",
+      "steps": [
+        {
+          "node": "agent",
+          "at_ms": 1467,
+          "tool_calls": [
+            {
+              "name": "move_character",
+              "args": {
+                "direction": "west",
+                "steps": 1
+              }
+            }
+          ]
+        },
+        {
+          "node": "tools",
+          "at_ms": 1469,
+          "tool_results": [
+            {
+              "tool": "move_character",
+              "status": "success",
+              "content": "Не можна піти на захід: перешкода - дерево на (1, 4). Персонаж лишається на (2, 4).\nОколиця (радіус 2):\n    0 1 2 3 4\n 2  . # . M .\n 3  . . . . .\n 4  T T @ # #\n 5  . . . . .\n 6  . . W W .\nОб'єкти поруч:\n- монстр на (3, 2): dx=+1, dy=-2"
+            }
+          ],
+          "hp": 16,
+          "position": [
+            2,
+            4
+          ]
+        },
+        {
+          "node": "agent",
+          "at_ms": 3583,
+          "text": "На захід не пройти: дорогу перекриває дерево на (1, 4). Ти залишаєшся на місці — (2, 4)."
+        },
+        {
+          "node": "formatter",
+          "at_ms": 5049,
+          "answer": "На захід не пройти: дорогу перекриває дерево на (1, 4). Ти залишаєшся на місці — (2, 4).",
+          "confidence": 1.0,
+          "sources": [
+            "move_character"
+          ]
+        }
+      ],
+      "model_calls": 2,
+      "tool_calls": 1,
+      "stop": null,
+      "seconds": 5.05,
+      "final": {
+        "hp": 16,
+        "position": [
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "turn": 5,
+      "label": "monster_attacks",
+      "player": "Огляньмося навколо.",
+      "started_at": "2026-11-23T12:39:21.664136+00:00",
+      "steps": [
+        {
+          "node": "agent",
+          "at_ms": 3501,
+          "text": "Отець Маркус озирається. Просто на схід, за кілька кроків, у кущах причаївся гоблін. На північ і південь шлях вільний, а на захід його перегороджує кам’яна стіна руїн. Далі на сході видніється річка, а за нею — щось блискуче на землі."
+        },
+        {
+          "node": "world_events",
+          "at_ms": 3501,
+          "event": {
+            "kind": "world_event",
+            "text": "[Подія світу] Монстри поруч атакують персонажа: (3, 2). Кожен монстр атакує окремо. Кинь roll_dice з dice='1d20' і purpose='атака монстра'. Якщо сума менша за 10 - промах, опиши це. Якщо не менша - влучання: кинь roll_dice з dice='1d4' і застосуй урон через modify_hp з від'ємним delta."
+          }
+        },
+        {
+          "node": "agent",
+          "at_ms": 5147,
+          "tool_calls": [
+            {
+              "name": "roll_dice",
+              "args": {
+                "dice": "1d20",
+                "attribute": null,
+                "modifier": 0,
+                "purpose": "атака монстра"
+              }
+            }
+          ]
+        },
+        {
+          "node": "tools",
+          "at_ms": 5149,
+          "tool_results": [
+            {
+              "tool": "roll_dice",
+              "status": "success",
+              "content": "атака монстра -> кубики 1d20: [14] = разом 14"
+            }
+          ]
+        },
+        {
+          "node": "agent",
+          "at_ms": 6810,
+          "tool_calls": [
+            {
+              "name": "roll_dice",
+              "args": {
+                "dice": "1d4",
+                "attribute": null,
+                "modifier": 0,
+                "purpose": "урон атаки монстра"
+              }
+            }
+          ]
+        },
+        {
+          "node": "tools",
+          "at_ms": 6813,
+          "tool_results": [
+            {
+              "tool": "roll_dice",
+              "status": "success",
+              "content": "урон атаки монстра -> кубики 1d4: [3] = разом 3"
+            }
+          ]
+        },
+        {
+          "node": "agent",
+          "at_ms": 8888,
+          "tool_calls": [
+            {
+              "name": "modify_hp",
+              "args": {
+                "delta": -3,
+                "reason": "удар атаки монстра"
+              }
+            }
+          ]
+        },
+        {
+          "node": "tools",
+          "at_ms": 8891,
+          "tool_results": [
+            {
+              "tool": "modify_hp",
+              "status": "success",
+              "content": "Урон 3 (удар атаки монстра): HP 16 -> 13/16"
+            }
+          ],
+          "hp": 13,
+          "position": [
+            2,
+            2
+          ]
+        },
+        {
+          "node": "agent",
+          "at_ms": 11242,
+          "text": "Гоблін вискакує з кущів і влучає в Отця Маркуса, завдавши 3 ушкодження. Маркус відступає під ударом, але втримується на ногах: **13/16 HP**."
+        },
+        {
+          "node": "formatter",
+          "at_ms": 13286,
+          "answer": "Гоблін вискакує з кущів і влучає в Отця Маркуса, завдавши 3 ушкодження. Маркус утримується на ногах: 13/16 HP.",
+          "confidence": 1.0,
+          "sources": [
+            "roll_dice",
+            "roll_dice",
+            "modify_hp"
+          ]
+        }
+      ],
+      "model_calls": 5,
+      "tool_calls": 3,
+      "stop": null,
+      "seconds": 13.287,
+      "final": {
+        "hp": 13,
+        "position": [
+          2,
+          2
+        ]
+      }
+    }
+  ]
+}

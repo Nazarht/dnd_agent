@@ -11,7 +11,7 @@ from langchain_core.messages import ToolMessage
 from langchain_core.tools import InjectedToolCallId, tool
 from langgraph.prebuilt import InjectedState
 from langgraph.types import Command
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from dnd_agent.game.character import Character
 from dnd_agent.game.world import Direction, GameMap
@@ -96,6 +96,12 @@ class MoveInput(BaseModel):
         description="Кількість клітинок від 1 до 5. Персонаж зупиняється раніше, якщо натрапить на "
         "перешкоду: стіна, вода, дерево, монстр або край карти.",
     )
+
+    @field_validator("direction", mode="before")
+    @classmethod
+    def normalize_direction(cls, value):
+        """Приймає напрямок у будь-якому регістрі: 'East' і ' north ' теж дійсні. Іншу дію лишає Enum."""
+        return value.strip().lower() if isinstance(value, str) else value
 
 
 @tool(args_schema=MoveInput)

@@ -33,6 +33,9 @@ class Cell(StrEnum):
         }[self.name]
 
 
+# Розмір карти гри: 8x8 клітинок. Використовується для перевірки координат у вхідних даних інструментів
+MAP_SIZE = 8
+
 # Клітинки, через які персонаж не може пройти
 BLOCKING = frozenset({Cell.TREE, Cell.WALL, Cell.WATER, Cell.MONSTER})
 

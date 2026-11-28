@@ -1,0 +1,10 @@
+{
+  "run_id": "20261123-123801-76d3",
+  "command": "eval",
+  "status": "finished",
+  "started_at": "2026-11-23T12:38:01.345362+00:00",
+  "turns": 5,
+  "finished_at": "2026-11-23T12:38:39.860988+00:00",
+  "passed": 4,
+  "total": 5
+}

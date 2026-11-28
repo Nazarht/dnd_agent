@@ -1,0 +1,379 @@
+{
+  "run_id": "20261128-153500-2591",
+  "model": "gpt-6-luna",
+  "total": 7,
+  "passed": 7,
+  "cases": [
+    {
+      "id": "approach_attack_remove",
+      "difficulty": "complex",
+      "query": "Підійди до гобліна, атакуй його мечем і, якщо переміг, прибери його з карти. Гоблін слабкий: будь-який кидок атаки його вбиває.",
+      "description": "Ланцюжок із трьох залежних дій: рух до гобліна на (3, 2), кидок атаки, потім modify_map прибирає гобліна. Гоблін блокує рух, тож персонаж зупиняється на (4, 2).",
+      "expected": {
+        "tools": [
+          "modify_map",
+          "move_character",
+          "roll_dice"
+        ],
+        "sequence": [
+          "move_character",
+          "roll_dice",
+          "modify_map"
+        ],
+        "position": [
+          4,
+          2
+        ],
+        "hp": null,
+        "event": null,
+        "floor": [
+          3,
+          2
+        ]
+      },
+      "actual": {
+        "tools": [
+          "modify_map",
+          "move_character",
+          "roll_dice"
+        ],
+        "tool_calls": [
+          "move_character",
+          "roll_dice",
+          "modify_map"
+        ],
+        "events": [],
+        "stop": null,
+        "position": [
+          4,
+          2
+        ],
+        "hp": 16,
+        "answer": "Отець Маркус наблизився до гобліна й ударив мечем. Кидок атаки — 9; за твоєю умовою цього достатньо, щоб перемогти його. Гобліна прибрано з карти, клітинка (3, 2) тепер вільна.",
+        "cleared": true
+      },
+      "checks": {
+        "tools": true,
+        "no_stop": true,
+        "sequence": true,
+        "position": true,
+        "floor": true
+      },
+      "passed": true,
+      "steps": [
+        "agent: move_character",
+        "tools",
+        "agent: roll_dice",
+        "tools",
+        "agent: modify_map",
+        "tools",
+        "agent",
+        "formatter: відповідь"
+      ],
+      "time_seconds": 16.978,
+      "error": null
+    },
+    {
+      "id": "attack_roll",
+      "difficulty": "medium",
+      "query": "Атакую гобліна мечем!",
+      "description": "Гоблін поруч (3, 2): атака має бути кидком кубиків, а не вигаданим результатом.",
+      "expected": {
+        "tools": [
+          "roll_dice"
+        ],
+        "sequence": [],
+        "position": null,
+        "hp": null,
+        "event": null,
+        "floor": null
+      },
+      "actual": {
+        "tools": [
+          "roll_dice"
+        ],
+        "tool_calls": [
+          "roll_dice",
+          "roll_dice"
+        ],
+        "events": [
+          "world_event"
+        ],
+        "stop": null,
+        "position": [
+          2,
+          2
+        ],
+        "hp": 16,
+        "answer": "Гоблін вискакує з кущів і кидається на Маркуса, але його удар проходить повз. Маркус неушкоджений."
+      },
+      "checks": {
+        "tools": true,
+        "no_stop": true
+      },
+      "passed": true,
+      "steps": [
+        "agent: roll_dice",
+        "tools",
+        "agent",
+        "world_events: world_event",
+        "agent: roll_dice",
+        "tools",
+        "agent",
+        "formatter: відповідь"
+      ],
+      "time_seconds": 9.627,
+      "error": null
+    },
+    {
+      "id": "blocked_by_tree",
+      "difficulty": "medium",
+      "query": "Іду на захід на одну клітинку.",
+      "description": "Дерево блокує рух: персонаж має лишитися на місці (2, 4), хід не ламається.",
+      "expected": {
+        "tools": [
+          "move_character"
+        ],
+        "sequence": [],
+        "position": [
+          2,
+          4
+        ],
+        "hp": null,
+        "event": null,
+        "floor": null
+      },
+      "actual": {
+        "tools": [
+          "move_character"
+        ],
+        "tool_calls": [
+          "move_character"
+        ],
+        "events": [],
+        "stop": null,
+        "position": [
+          2,
+          4
+        ],
+        "hp": 16,
+        "answer": "На захід не пройти: клітинку (1, 4) займає дерево. Ти залишаєшся на місці — (2, 4)."
+      },
+      "checks": {
+        "tools": true,
+        "no_stop": true,
+        "position": true
+      },
+      "passed": true,
+      "steps": [
+        "agent: move_character",
+        "tools",
+        "agent",
+        "formatter: відповідь"
+      ],
+      "time_seconds": 4.507,
+      "error": null
+    },
+    {
+      "id": "monster_attacks",
+      "difficulty": "medium",
+      "query": "Огляньмося навколо.",
+      "description": "Монстр поруч на (3, 2) атакує сам: подія світу і кидок, без запиту гравця.",
+      "expected": {
+        "tools": [
+          "roll_dice"
+        ],
+        "sequence": [],
+        "position": null,
+        "hp": null,
+        "event": "world_event",
+        "floor": null
+      },
+      "actual": {
+        "tools": [
+          "roll_dice"
+        ],
+        "tool_calls": [
+          "roll_dice"
+        ],
+        "events": [
+          "world_event"
+        ],
+        "stop": null,
+        "position": [
+          2,
+          2
+        ],
+        "hp": 16,
+        "answer": "Гоблін вискакує з кущів і кидається на Отця Маркуса, але його удар ковзає повз. Маркус неушкоджений — атака промахнулася."
+      },
+      "checks": {
+        "tools": true,
+        "no_stop": true,
+        "event": true
+      },
+      "passed": true,
+      "steps": [
+        "agent",
+        "world_events: world_event",
+        "agent: roll_dice",
+        "tools",
+        "agent",
+        "formatter: відповідь"
+      ],
+      "time_seconds": 8.668,
+      "error": null
+    },
+    {
+      "id": "walk_to_treasure",
+      "difficulty": "medium",
+      "query": "Іди на схід до скарбу.",
+      "description": "До скарбу на (6, 3) шість клітинок, а за один виклик можна максимум п'ять: потрібні два виклики руху поспіль.",
+      "expected": {
+        "tools": [
+          "move_character"
+        ],
+        "sequence": [
+          "move_character",
+          "move_character"
+        ],
+        "position": [
+          6,
+          3
+        ],
+        "hp": null,
+        "event": null,
+        "floor": null
+      },
+      "actual": {
+        "tools": [
+          "move_character"
+        ],
+        "tool_calls": [
+          "move_character",
+          "move_character"
+        ],
+        "events": [],
+        "stop": null,
+        "position": [
+          6,
+          3
+        ],
+        "hp": 16,
+        "answer": "Ти дістався скарбу на (6, 3). Тепер його не видно на карті — схоже, ти його підібрав. Уміст скарбу поки не визначено."
+      },
+      "checks": {
+        "tools": true,
+        "no_stop": true,
+        "sequence": true,
+        "position": true
+      },
+      "passed": true,
+      "steps": [
+        "agent: move_character",
+        "tools",
+        "agent: move_character",
+        "tools",
+        "agent",
+        "formatter: відповідь"
+      ],
+      "time_seconds": 8.323,
+      "error": null
+    },
+    {
+      "id": "move_two_steps",
+      "difficulty": "simple",
+      "query": "Іду на схід два кроки.",
+      "description": "Простий рух без перешкод: має бути інструмент руху і позиція (2, 3).",
+      "expected": {
+        "tools": [
+          "move_character"
+        ],
+        "sequence": [],
+        "position": [
+          2,
+          3
+        ],
+        "hp": null,
+        "event": null,
+        "floor": null
+      },
+      "actual": {
+        "tools": [
+          "move_character"
+        ],
+        "tool_calls": [
+          "move_character"
+        ],
+        "events": [],
+        "stop": null,
+        "position": [
+          2,
+          3
+        ],
+        "hp": 16,
+        "answer": "Інструмент повідомив, що ти пройшов два кроки на схід і опинився на (2, 3). Водночас він указав початкову позицію (0, 3), що не збігається зі станом гри. Гоблін — на (3, 2), на одну клітинку на схід і одну на північ від тебе."
+      },
+      "checks": {
+        "tools": true,
+        "no_stop": true,
+        "position": true
+      },
+      "passed": true,
+      "steps": [
+        "agent: move_character",
+        "tools",
+        "agent",
+        "formatter: відповідь"
+      ],
+      "time_seconds": 6.601,
+      "error": null
+    },
+    {
+      "id": "trap_damage",
+      "difficulty": "simple",
+      "query": "Мене вдарила пастка, це 5 шкоди.",
+      "description": "Урон від відомої кількості має змінити HP через modify_hp: 16 -> 11.",
+      "expected": {
+        "tools": [
+          "modify_hp"
+        ],
+        "sequence": [],
+        "position": null,
+        "hp": 11,
+        "event": null,
+        "floor": null
+      },
+      "actual": {
+        "tools": [
+          "modify_hp"
+        ],
+        "tool_calls": [
+          "modify_hp"
+        ],
+        "events": [],
+        "stop": null,
+        "position": [
+          0,
+          3
+        ],
+        "hp": 11,
+        "answer": "Пастка боляче вдарила Отця Маркуса. Ти отримав 5 шкоди; тепер у тебе 11/16 HP."
+      },
+      "checks": {
+        "tools": true,
+        "no_stop": true,
+        "hp": true
+      },
+      "passed": true,
+      "steps": [
+        "agent: modify_hp",
+        "tools",
+        "agent",
+        "formatter: відповідь"
+      ],
+      "time_seconds": 5.42,
+      "error": null
+    }
+  ]
+}

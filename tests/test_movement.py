@@ -69,6 +69,18 @@ def test_move_input_rejects_unknown_direction():
         MoveInput(direction="up", steps=1)
 
 
+@pytest.mark.parametrize("raw", ["East", " north ", "SOUTH"])
+def test_move_input_accepts_direction_in_any_case(raw):
+    assert MoveInput(direction=raw, steps=1).direction in set(Direction)
+
+
+def test_move_tool_accepts_capitalized_direction(world, priest):
+    command = move_character.invoke(
+        {"direction": "East", "steps": 2, "character": priest, "world": world, "tool_call_id": "t1"}
+    )
+    assert command.update["character"].position == (2, 3)
+
+
 def test_move_tool_updates_only_position(world, priest):
     command = move_character.invoke(
         {"direction": "east", "steps": 2, "character": priest, "world": world, "tool_call_id": "t1"}

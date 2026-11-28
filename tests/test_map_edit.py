@@ -44,3 +44,14 @@ def test_unknown_cell_name_is_rejected_by_schema(world, priest):
 def test_negative_coordinate_is_rejected_by_schema(world, priest):
     with pytest.raises(ValidationError):
         edit(world, priest, x=-1)
+
+
+@pytest.mark.parametrize("field", ["x", "y"])
+def test_coordinate_outside_8x8_map_is_rejected_by_validator(world, priest, field):
+    with pytest.raises(ValidationError, match=f"{field}=8 поза картою"):
+        edit(world, priest, **{field: 8})
+
+
+def test_last_cell_of_the_map_is_accepted(world, priest):
+    command = edit(world, priest, x=7, y=7, cell="tree", reason="дерево виросло")
+    assert command.update["world"].cell(7, 7) == Cell.TREE

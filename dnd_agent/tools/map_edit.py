@@ -12,10 +12,10 @@ from langchain_core.messages import ToolMessage
 from langchain_core.tools import InjectedToolCallId, tool
 from langgraph.prebuilt import InjectedState
 from langgraph.types import Command
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
 from dnd_agent.game.character import Character
-from dnd_agent.game.world import Cell, GameMap
+from dnd_agent.game.world import MAP_SIZE, Cell, GameMap
 
 # Значення для LLM - англійські імена клітинок (floor, tree, ...), як і решта ідентифікаторів
 CellName = StrEnum("CellName", {cell.name: cell.name.lower() for cell in Cell})
@@ -26,8 +26,8 @@ class MapEditInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True)
 
-    x: int = Field(ge=0, description="Стовпець клітинки, відлік від 0 ліворуч.")
-    y: int = Field(ge=0, description="Рядок клітинки, відлік від 0 згори.")
+    x: int = Field(ge=0, description=f"Стовпець клітинки, відлік від 0 ліворуч. Діапазон 0..{MAP_SIZE - 1}.")
+    y: int = Field(ge=0, description=f"Рядок клітинки, відлік від 0 згори. Діапазон 0..{MAP_SIZE - 1}.")
     cell: CellName = Field(
         description="Новий тип клітинки. Значення англійською: floor (підлога, прибирає монстра чи дерево), "
         "tree (дерево), monster (монстр), treasure (скарб), wall (стіна), water (вода)."
@@ -37,6 +37,14 @@ class MapEditInput(BaseModel):
         max_length=100,
         description="Коротка причина зміни, наприклад 'гоблін переможений' або 'скарб підібрано'.",
     )
+
+    @field_validator("x", "y")
+    @classmethod
+    def check_on_map(cls, value: int, info: ValidationInfo) -> int:
+        """Координата має лежати на карті 8x8; нижню межу вже дає Field(ge=0)."""
+        if value >= MAP_SIZE:
+            raise ValueError(f"{info.field_name}={value} поза картою: допустимо 0..{MAP_SIZE - 1}")
+        return value
 
 
 @tool(args_schema=MapEditInput)
